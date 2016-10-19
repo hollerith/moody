@@ -6,9 +6,9 @@ function addMoodyLabels() {
   positivity = sentiment.positivity,
   negativity = sentiment.negativity;
 
-  var goodLabel = GmailApp.getUserLabelByName("LOVE");
-  var hateLabel = GmailApp.getUserLabelByName("HATE");
-    
+  var goodLabel = GmailApp.getUserLabelByName("LOVE") || GmailApp.createLabel("LOVE");
+  var hateLabel = GmailApp.getUserLabelByName("HATE") || GmailApp.createLabel("HATE");
+  
   // process all threads in the Inbox
   var threads = GmailApp.getInboxThreads();
   
@@ -2578,4 +2578,5 @@ Moody = (function() {
   return Moody;
 
 })();
+
 
