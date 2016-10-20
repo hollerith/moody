@@ -1,54 +1,52 @@
 function addMoodyLabels() {
   
   sentiment = new Moody();
-  
-  var analyze = sentiment.analyze;
-  positivity = sentiment.positivity,
-  negativity = sentiment.negativity;
 
-  var goodLabel = GmailApp.getUserLabelByName("LOVE") || GmailApp.createLabel("LOVE");
+  var loveLabel = GmailApp.getUserLabelByName("LOVE") || GmailApp.createLabel("LOVE");
   var hateLabel = GmailApp.getUserLabelByName("HATE") || GmailApp.createLabel("HATE");
   
   // process all threads in the Inbox
   var threads = GmailApp.getInboxThreads();
   
-  for (var i = 0; i < threads.length; i++) {
-    // get all messages in a given thread
-    var messages = threads[i].getMessages();
-    for (var j = 0; j < messages.length; j++) {
-      var message = messages[j];
-      var body = message.getRawContent();
-            
-      threads[i].removeLabel(goodLabel);
-      threads[i].removeLabel(hateLabel);
+  threads.forEach(function(thread) {
+    
+    var messages = thread.getMessages();
+    
+    messages.forEach(function(message) {
       
+      thread.removeLabel(loveLabel);
+      thread.removeLabel(hateLabel);
+
       try {
         var text = message.getPlainBody();
-        score = analyze(text).score || 0;
+        score = sentiment.analyze(text).score || 0;
       } catch(e) {
         score = 0;
         Logger.log("ERROR:"+e);
       }      
       if (score > 10) { 
-        threads[i].addLabel(goodLabel);
+        thread.addLabel(loveLabel);
       };       
       if (score < -1) {
-        threads[i].addLabel(hateLabel);
+        thread.addLabel(hateLabel);
       }; 
-      Logger.log(message.getSubject() + " score " + score);
+      
+      Logger.log('Updated %s', message.getSubject()+" score "+score);
+      
+    });
+    
+  });
 
-    }
-  }
 }
 
 var Moody;
 
 Moody = (function() {
-  var afinn;
+  var lexicon;
 
   function Moody() {}
 
-  afinn = {
+  lexicon = {
     "abandon": -2,
     "abandoned": -2,
     "abandons": -2,
@@ -2513,70 +2511,23 @@ Moody = (function() {
     "zealous": 2
   };
 
-  Moody.prototype.negativity = function(phrase) {
-    var addPush, hits, i, item, j, len, noPunctuation, tokens, words;
-    addPush = function(t, score) {
-      hits -= score;
-      return words.push(t);
-    };
-    noPunctuation = phrase.replace(/[^a-zA-Z ]+/g, ' ').replace('/ {2,}/', ' ');
-    tokens = noPunctuation.toLowerCase().split(" ");
-    hits = 0;
-    words = [];
-    for (i = j = 0, len = tokens.length; j < len; i = ++j) {
-      item = tokens[i];
-      if (afinn.hasOwnProperty(item)) {
-        if (afinn[item] < 0) {
-          addPush(item, afinn[item]);
-        }
-      }
-    }
-    return {
-      score: hits,
-      comparative: hits / words.length,
-      words: words
-    };
-  };
-
-  Moody.prototype.positivity = function(phrase) {
-    var addPush, hits, i, item, j, len, noPunctuation, tokens, words;
-    addPush = function(t, score) {
-      hits += score;
-      return words.push(t);
-    };
-    noPunctuation = phrase.replace(/[^a-zA-Z ]+/g, ' ').replace('/ {2,}/', ' ');
-    tokens = noPunctuation.toLowerCase().split(" ");
-    hits = 0;
-    words = [];
-    for (i = j = 0, len = tokens.length; j < len; i = ++j) {
-      item = tokens[i];
-      if (afinn.hasOwnProperty(item)) {
-        if (afinn[item] > 0) {
-          addPush(item, afinn[item]);
-        }
-      }
-    }
-    return {
-      score: hits,
-      comparative: hits / words.length,
-      words: words
-    };
-  };
-
   Moody.prototype.analyze = function(phrase) {
-    var neg, pos;
-    pos = Moody.prototype.positivity(phrase);
-    neg = Moody.prototype.negativity(phrase);
-    return {
-      score: pos.score - neg.score,
-      comparative: pos.comparative - neg.comparative,
-      positive: pos,
-      negative: neg
-    };
+    var hits, tokens;
+    
+    hits = 0;
+    tokens = phrase.replace(/[^a-zA-Z ]+/g, ' ').replace('/ {2,}/', ' ').toLowerCase().split(" ");
+    
+    tokens.forEach(function(item) {
+      
+      if (lexicon.hasOwnProperty(item)) {
+        hits += lexicon[item];
+      }
+      
+    });
+    
+    return { score: hits };
   };
-
+  
   return Moody;
 
 })();
-
-
