@@ -6,7 +6,8 @@ function addMoodyLabels() {
   var hateLabel = GmailApp.getUserLabelByName("HATE") || GmailApp.createLabel("HATE");
   
   // process all threads in the Inbox
-  var threads = GmailApp.getInboxThreads();
+  //var threads = GmailApp.getInboxThreads();
+  var threads = GmailApp.search("newer_than:1d");
   
   threads.forEach(function(thread) {
     
