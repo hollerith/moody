@@ -1,6 +1,6 @@
 function addMoodyLabels() {
   
-  sentiment = new Moody();
+  //sentiment = new Moody();
 
   var loveLabel = GmailApp.getUserLabelByName("LOVE") || GmailApp.createLabel("LOVE");
   var hateLabel = GmailApp.getUserLabelByName("HATE") || GmailApp.createLabel("HATE");
@@ -20,7 +20,7 @@ function addMoodyLabels() {
 
       try {
         var text = message.getPlainBody();
-        score = sentiment.analyze(text).score || 0;
+        score = analyse(text);
       } catch(e) {
         score = 0;
         Logger.log("ERROR:"+e);
@@ -28,7 +28,7 @@ function addMoodyLabels() {
       if (score > 10) { 
         thread.addLabel(loveLabel);
       };       
-      if (score < -1) {
+      if (score < 0) {
         thread.addLabel(hateLabel);
       }; 
       
@@ -40,14 +40,9 @@ function addMoodyLabels() {
 
 }
 
-var Moody;
+function analyse(phrase) {
 
-Moody = (function() {
-  var lexicon;
-
-  function Moody() {}
-
-  lexicon = {
+  var lexicon = {
     "abandon": -2,
     "abandoned": -2,
     "abandons": -2,
@@ -2511,24 +2506,19 @@ Moody = (function() {
     "zealots": -2,
     "zealous": 2
   };
-
-  Moody.prototype.analyze = function(phrase) {
-    var hits, tokens;
-    
-    hits = 0;
-    tokens = phrase.replace(/[^a-zA-Z ]+/g, ' ').replace('/ {2,}/', ' ').toLowerCase().split(" ");
-    
-    tokens.forEach(function(item) {
-      
-      if (lexicon.hasOwnProperty(item)) {
-        hits += lexicon[item];
-      }
-      
-    });
-    
-    return { score: hits };
-  };
   
-  return Moody;
-
-})();
+  var hits, tokens;
+  
+  hits = 0;
+  tokens = phrase.replace(/[^a-zA-Z ]+/g, ' ').replace('/ {2,}/', ' ').toLowerCase().split(" ");
+  
+  tokens.forEach(function(item) {
+    
+    if (lexicon.hasOwnProperty(item)) {
+      hits += lexicon[item];
+    }
+    
+  });
+  
+  return hits;  
+}
