@@ -1,11 +1,13 @@
-function addMoodyLabels() {
+function processInbox() {
 
   // sentiment labels
-  var goodLabel = GmailApp.getUserLabelByName("HAPPY");
-  var hateLabel = GmailApp.getUserLabelByName("HATER");
+  var goodLabel = GmailApp.getUserLabelByName("LOVE");
+  var hateLabel = GmailApp.getUserLabelByName("HATE");
 
   // process all threads in the Inbox
-  var threads = GmailApp.getInboxThreads();
+  //var threads = GmailApp.getInboxThreads();
+  
+  var threads = GmailApp.search("label:Sent");
   
   for (var i = 0; i < threads.length; i++) {
     // get all messages in a given thread
@@ -19,7 +21,7 @@ function addMoodyLabels() {
 
       try {
         var text = message.getPlainBody();
-        sentiment = analyze(text);
+        sentiment = predict(text);
       } catch(e) {
         sentiment = '';
         Logger.log("ERROR:"+e);
@@ -35,7 +37,7 @@ function addMoodyLabels() {
   }
 }
 
-function analyze(phrase) {
+function predict(phrase) {
   var projectNumber = '414649711441';
   var hostedModelName = 'sample.sentiment';
 
@@ -52,4 +54,3 @@ function analyze(phrase) {
   Logger.log('Sentiment: ' + prediction.outputLabel);
   return prediction.outputLabel
 }
-
